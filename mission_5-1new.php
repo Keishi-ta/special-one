@@ -52,50 +52,80 @@
 
  //テーブル作成
      
-       $pass=$_POST["pass1"];
-       $delpass=$_POST["pass2"];
-       $edipass=$_POST["pass3"];   
-    
-       if(isset($_POST["name"]) && isset($_POST["comment"])){
-          $sql = $pdo -> prepare("INSERT INTO tbtest (name, comment) VALUES (:name, :comment)");
+       if(!empty($_POST["name"]) && !empty($_POST["comment"])&& !empty($_POST["pass1"])){
+          $sql = $pdo -> prepare("INSERT INTO tbtest2 (name, comment, created, password) VALUES (:name, :comment, :created, :password)");
           $sql -> bindParam(':name', $name, PDO::PARAM_STR);
           $sql -> bindParam(':comment', $comment, PDO::PARAM_STR);
+          $sql -> bindParam(':created', $date, PDO::PARAM_STR);
+          $sql -> bindParam(':password', $pass, PDO::PARAM_STR);
           $name = $_POST["name"];
-          $comment = $_POST["comment"]; 
+          $comment = $_POST["comment"];
+          $date=date("Y/m/d H:i:s");
+          $pass=$_POST["pass1"];
           $sql -> execute();
        }
      //新規投稿　テーブルにデータを登録
 
-       if(isset($_POST["editnumber"])&&isset($_POST["editname"])&&isset($_POST["editcomment"])){
+       if(!empty($_POST["editnumber"])&& !empty($_POST["editname"])&& !empty($_POST["editcomment"])){
           $id = $_POST["editnumber"] ;//変更する投稿番号
           $name = $_POST["editname"];
           $comment = $_POST["editcomment"]; //変更したい名前、変更したいコメントは自分で決めること
-          $sql = 'UPDATE tbtest SET name=:name,comment=:comment WHERE id=:id';
-          $stmt = $pdo->prepare($sql);
-          $stmt->bindParam(':name', $name, PDO::PARAM_STR);
-          $stmt->bindParam(':comment', $comment, PDO::PARAM_STR);
-          $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-          $stmt->execute(); 
+          $date=date("Y/m/d H:i:s");
+          $edipass=$_POST["pass3"];
+          
+          $sql = 'SELECT * FROM tbtest2';
+          $stmt = $pdo->query($sql);
+          $results = $stmt->fetchAll();
+           foreach ($results as $row){
+               if($row['password']==$edipass){
+                  $sql = 'UPDATE tbtest2 SET name=:name,comment=:comment,created=:created WHERE id=:id';
+                  $stmt = $pdo->prepare($sql);
+                  $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+                  $stmt->bindParam(':comment', $comment, PDO::PARAM_STR);
+                  $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                  $stmt->bindParam(':created', $date, PDO::PARAM_STR);
+                  $stmt->execute();  
+               }
+               else{
+                   
+               }
+           }
        }
-     //編集機能　テーブル人登録されたデータを編集
+     //編集機能　テーブルに登録されたデータを編集
      
-       if(isset($_POST["delete"])){
+       if(!empty($_POST["delete"])){
           $id = $_POST["delete"];
-          $sql = 'delete from tbtest where id=:id';
-          $stmt = $pdo->prepare($sql);
-          $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-          $stmt->execute();
+          $delpass=$_POST["pass2"];
+         
+          $sql = 'SELECT * FROM tbtest2';
+          $stmt = $pdo->query($sql);
+          $results = $stmt->fetchAll();
+           foreach ($results as $row){
+              if($row['password']==$delpass){
+                 $sql = 'delete from tbtest2 where id=:id';
+                 $stmt = $pdo->prepare($sql);
+                 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                 $stmt->execute(); 
+              }
+          
+              else{
+                  
+              }
+           }
        }
      //削除機能　テーブルに登録されたデータを削除
       
-       $sql = 'SELECT * FROM tbtest';
+       $sql = 'SELECT * FROM tbtest2';
        $stmt = $pdo->query($sql);
        $results = $stmt->fetchAll();
        foreach ($results as $row){
          //$rowの中にはテーブルのカラム名が入る
            echo $row['id'].',';
            echo $row['name'].',';
-           echo $row['comment'].'<br>';
+           echo $row['comment'].',';
+           echo $row['created'].',';
+          
+           echo $row['password'].'<br>';
        echo "<hr>";
        }
      //テーブルの登録されたデータを所得し、表示 
